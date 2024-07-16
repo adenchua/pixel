@@ -1,2 +1,2 @@
 # pixel
-Turn data into visualization for powerful storytelling
+Turn data into powerful visualization for effective storytelling
