@@ -16,7 +16,7 @@
   "include": ["**/*.ts", "**/*.tsx"],
   "ts-node": {
     "compilerOptions": {
-        "module": "CommonJS"
-     }
+      "module": "CommonJS"
+    }
   }
 }
