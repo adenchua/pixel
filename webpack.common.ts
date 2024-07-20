@@ -11,8 +11,7 @@ const config: Configuration = {
   entry: "./src/index.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "[name].bundle.js",
-    publicPath: "http://localhost:3000",
+    filename: "bundle.js",
     clean: true, // only used files will be generated
   },
   resolve: {
