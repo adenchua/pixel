@@ -10,7 +10,7 @@ import {
   getMinMaxValues,
 } from "../utils/chartHelpers";
 
-interface LineChartProps {
+interface BarChartProps {
   canvasHeight: number;
   canvasWidth: number;
   margin: ChartMargin;
@@ -28,15 +28,15 @@ interface DataPoint {
   y: number;
 }
 
-function LineChart(props: LineChartProps): JSX.Element {
+function BarChart(props: BarChartProps): JSX.Element {
   const {
     canvasHeight,
     canvasWidth,
-    footerText,
     margin,
-    series,
-    subtitle,
     title,
+    subtitle,
+    footerText,
+    series,
     xAxis,
     canvasBackgroundColor = "#EBE9E0",
     primaryAccentColor = "#E3120B",
@@ -58,15 +58,10 @@ function LineChart(props: LineChartProps): JSX.Element {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scalePoint().domain(xAxis.data).range([0, chartWidth]);
+    const xScale = d3.scaleBand().domain(xAxis.data).range([0, chartWidth]).padding(0.3);
 
     const { min: yMin, max: yMax } = getMinMaxValues(series);
     const yScale = d3.scaleLinear().domain([yMin, yMax]).range([chartHeight, 0]);
-
-    const lineGenerator = d3
-      .line<DataPoint>()
-      .x((d) => xScale(d.x) as number)
-      .y((d) => yScale(d.y));
 
     // add grid lines
     svgCanvas
@@ -81,14 +76,8 @@ function LineChart(props: LineChartProps): JSX.Element {
       );
 
     series.forEach((eachSeries) => {
-      const {
-        data,
-        label,
-        color,
-        strokeWidth = 1,
-        labelYOffset = 0,
-        labelXOffset = 0,
-      } = eachSeries;
+      const { data, color = primaryAccentColor } = eachSeries;
+
       const transformedData: DataPoint[] = data.map((dataPoint, index) => {
         return {
           x: xAxis.data[index],
@@ -96,27 +85,17 @@ function LineChart(props: LineChartProps): JSX.Element {
         };
       });
 
-      // add line
+      // add bars
       svgCanvas
-        .append("path")
-        .attr("d", lineGenerator(transformedData))
-        .attr("class", "line")
-        .attr("stroke", color)
-        .attr("stroke-width", strokeWidth)
-        .attr("fill", "none");
-
-      // add label to line
-      svgCanvas
-        .append("text")
-        .attr(
-          "transform",
-          // eslint-disable-next-line @stylistic/max-len
-          `translate(${chartWidth - margin.right + labelXOffset},${yScale(transformedData[transformedData.length - 1].y) + labelYOffset})`,
-        )
-        .attr("text-anchor", "start")
-        .style("font-size", "12px")
-        .style("fill", color)
-        .text(label);
+        .selectAll(".bar")
+        .data(transformedData)
+        .enter()
+        .append("rect")
+        .attr("fill", color)
+        .attr("x", (d) => xScale(d.x) as unknown as string)
+        .attr("width", xScale.bandwidth())
+        .attr("y", (d) => yScale(d.y))
+        .attr("height", (d) => chartHeight - yScale(d.y));
     });
 
     // add x-axis
@@ -126,7 +105,7 @@ function LineChart(props: LineChartProps): JSX.Element {
       .style("font-size", 14)
       .call(d3.axisBottom(xScale));
 
-    // add y-axis
+    // add y-Axis
     svgCanvas
       .append("g")
       .attr("transform", `translate(${chartWidth + margin.right},-6)`)
@@ -156,4 +135,4 @@ function LineChart(props: LineChartProps): JSX.Element {
   return <div ref={canvasRef} />;
 }
 
-export default LineChart;
+export default BarChart;

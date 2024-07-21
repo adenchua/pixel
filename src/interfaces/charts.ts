@@ -6,7 +6,7 @@ export interface ChartMargin {
 }
 
 export interface Series {
-  data: Array<number | null>;
+  data: Array<number | undefined>;
   color: string;
   label: string;
   strokeWidth?: 1 | 2 | 3 | 4;

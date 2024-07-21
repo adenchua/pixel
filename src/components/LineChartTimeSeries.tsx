@@ -2,7 +2,13 @@ import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 
 import { ChartMargin, Series, XAxis } from "../interfaces/charts";
-import { getMaxDataPoint, getMinDataPoint } from "../utils/chartHelpers";
+import {
+  addFooterText,
+  addStylingBlock,
+  addSubtitle,
+  addTitle,
+  getMinMaxValues,
+} from "../utils/chartHelpers";
 
 interface LineChartTimeSeriesProps {
   canvasHeight: number;
@@ -37,19 +43,6 @@ function LineChartTimeSeries(props: LineChartTimeSeriesProps): JSX.Element {
   } = props;
   const canvasRef = useRef(null);
 
-  function getMinMaxValues(): { min: number; max: number } {
-    let min = 0;
-    let max = 0;
-
-    series.forEach((eachSeries) => {
-      const { data } = eachSeries;
-      max = Math.max(max, getMaxDataPoint(data) || 0);
-      min = Math.min(min, getMinDataPoint(data) || 0);
-    });
-
-    return { min, max };
-  }
-
   function buildChart(): void {
     const chartWidth = canvasWidth - margin.left - margin.right;
     const chartHeight = canvasHeight - margin.top - margin.bottom;
@@ -70,22 +63,13 @@ function LineChartTimeSeries(props: LineChartTimeSeriesProps): JSX.Element {
       .domain(d3.extent(xAxis.data, (d) => new Date(d)) as [Date, Date])
       .range([0, chartWidth]);
 
-    const { min: yMin, max: yMax } = getMinMaxValues();
+    const { min: yMin, max: yMax } = getMinMaxValues(series);
     const yScale = d3.scaleLinear().domain([yMin, yMax]).range([chartHeight, 0]);
 
     const lineGenerator = d3
       .line<DataPoint>()
       .x((d) => xScale(new Date(d.x)))
       .y((d) => yScale(d.y));
-
-    // add styling block
-    svgCanvas
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0 - margin.top)
-      .attr("width", 30)
-      .attr("height", 10)
-      .attr("fill", primaryAccentColor);
 
     // add grid lines
     svgCanvas
@@ -155,34 +139,17 @@ function LineChartTimeSeries(props: LineChartTimeSeriesProps): JSX.Element {
       .selectAll("path,line")
       .remove();
 
+    // add styling block
+    addStylingBlock(svgCanvas, margin.top, primaryAccentColor);
+
     // add title
-    svgCanvas
-      .append("text")
-      .attr("class", "title")
-      .attr("y", 0 - margin.top / 2)
-      .attr("text-anchor", "start")
-      .style("font-size", "16px")
-      .style("font-weight", "bold")
-      .text(title);
+    addTitle(svgCanvas, margin.top, title);
 
     // add sub-title
-    svgCanvas
-      .append("text")
-      .attr("class", "subtitle")
-      .attr("y", 0 - margin.top / 8)
-      .attr("text-anchor", "left")
-      .style("font-size", "14px")
-      .text(subtitle);
+    addSubtitle(svgCanvas, margin.top, subtitle);
 
     // add footer text
-    svgCanvas
-      .append("text")
-      .attr("class", "footer")
-      .attr("y", chartHeight + margin.top + margin.bottom - 72)
-      .attr("text-anchor", "left")
-      .style("font-size", "10px")
-      .attr("fill", "#333333")
-      .text(footerText);
+    addFooterText(svgCanvas, chartHeight, margin.bottom, footerText);
   }
 
   useEffect(() => {
