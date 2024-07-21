@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { ChartMargin, Series, XAxis } from "../interfaces/charts";
 import { getMaxDataPoint, getMinDataPoint } from "../utils/chartHelpers";
 
-interface LineChartProps {
+interface LineChartTimeSeriesProps {
   canvasHeight: number;
   canvasWidth: number;
   title: string;
@@ -18,11 +18,11 @@ interface LineChartProps {
 }
 
 interface DataPoint {
-  x: string;
+  x: Date;
   y: number;
 }
 
-function LineChart(props: LineChartProps): JSX.Element {
+function LineChartTimeSeries(props: LineChartTimeSeriesProps): JSX.Element {
   const {
     canvasHeight,
     canvasWidth,
@@ -65,14 +65,17 @@ function LineChart(props: LineChartProps): JSX.Element {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scalePoint().domain(xAxis.data).range([0, chartWidth]);
+    const xScale = d3
+      .scaleUtc()
+      .domain(d3.extent(xAxis.data, (d) => new Date(d)) as [Date, Date])
+      .range([0, chartWidth]);
 
     const { min: yMin, max: yMax } = getMinMaxValues();
     const yScale = d3.scaleLinear().domain([yMin, yMax]).range([chartHeight, 0]);
 
     const lineGenerator = d3
       .line<DataPoint>()
-      .x((d) => xScale(d.x) as number)
+      .x((d) => xScale(new Date(d.x)))
       .y((d) => yScale(d.y));
 
     // add styling block
@@ -105,9 +108,10 @@ function LineChart(props: LineChartProps): JSX.Element {
         labelYOffset = 0,
         labelXOffset = 0,
       } = eachSeries;
+      const parseTime = d3.timeParse("%Y-%m-%dT%H:%M:%SZ");
       const transformedData: DataPoint[] = data.map((dataPoint, index) => {
         return {
-          x: xAxis.data[index],
+          x: parseTime(xAxis.data[index]) || new Date(),
           y: dataPoint ?? 0,
         };
       });
@@ -140,7 +144,7 @@ function LineChart(props: LineChartProps): JSX.Element {
       .append("g")
       .attr("transform", `translate(0,${chartHeight})`)
       .style("font-size", 14)
-      .call(d3.axisBottom(xScale));
+      .call(d3.axisBottom(xScale).ticks(xAxis.data.length));
 
     // add y-axis
     svgCanvas
@@ -189,4 +193,4 @@ function LineChart(props: LineChartProps): JSX.Element {
   return <div ref={canvasRef} />;
 }
 
-export default LineChart;
+export default LineChartTimeSeries;

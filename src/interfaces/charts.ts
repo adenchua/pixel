@@ -15,6 +15,6 @@ export interface Series {
 }
 
 export interface XAxis {
-  type: "category" | "date";
+  type: "category" | "time";
   data: string[];
 }
