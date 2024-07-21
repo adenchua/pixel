@@ -24,6 +24,7 @@ module.exports = {
     "@stylistic/no-tabs": 1,
     "@stylistic/linebreak-style": [1, "unix"],
     "@stylistic/jsx-quotes": [1, "prefer-double"],
+    "react/require-default-props": 0,
   },
   parserOptions: {
     sourceType: "module",
